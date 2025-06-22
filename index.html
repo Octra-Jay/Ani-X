@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🔥 Deine Anime-Watchlist</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.5;
+            margin: 0;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e0e0e0;
+            padding: 15px;
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+        }
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .code-container {
+            max-width: 400px;
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            animation: fadeIn 1s ease-out;
+            position: relative;
+            z-index: 1;
+            margin: 20px auto;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: none;
+            position: relative;
+            z-index: 1;
+            transform: perspective(1000px);
+        }
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px) rotateX(10deg);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0) rotateX(0);
+        }
+        h1 {
+            color: #0284c7;
+            text-align: center;
+            font-size: 2em;
+            text-shadow: 0 0 15px rgba(2, 132, 199, 0.7);
+            margin-bottom: 15px;
+        }
+        h2 {
+            color: #f1fa8c;
+            font-size: 1.6em;
+            margin-top: 20px;
+        }
+        h3 {
+            color: #ff79c6;
+            font-size: 1.3em;
+            margin: 0;
+            text-shadow: 0 0 5px rgba(255, 121, 198, 0.5);
+        }
+        .watchtime-box {
+            background: #ef4444;
+            color: #f8f8f2;
+            padding: 12px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.5);
+            animation: pulse 2s infinite;
+            text-align: center;
+        }
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .anime-card {
+            background: rgba(51, 65, 85, 0.9);
+            backdrop-filter: blur(5px);
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            transform: perspective(1000px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            border: 1px solid #00b7eb;
+        }
+        .anime-card:hover {
+            transform: perspective(1000px) rotateY(5deg);
+            box-shadow: 0 8px 20px rgba(0, 183, 235, 0.5);
+        }
+        .anime-card h3 {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        .anime-card p {
+            font-size: 0.9em;
+            margin: 5px 0;
+            color: #d1d5db;
+        }
+        .anime-card .story {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .divider {
+            border-top: 1px solid #475569;
+            margin: 10px 0;
+        }
+        .status-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.3s ease;
+            animation: blink 3s infinite;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .status-btn.watch {
+            background: #f1fa8c;
+            color: #1e293b;
+        }
+        .status-btn.watched {
+            background: #22c55e;
+            color: #1e293b;
+        }
+        .status-btn:hover {
+            transform: scale(1.05);
+        }
+        .stars {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        .star {
+            color: #1e293b;
+            font-size: 1.2em;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+        .star.filled {
+            color: #f1fa8c;
+            text-shadow: 0 0 5px rgba(241, 250, 140, 0.7);
+        }
+        .star:hover {
+            transform: scale(1.2);
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #00b7eb;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            text-align: center;
+            animation: fadeIn 0.3s ease-out;
+            width: 280px;
+        }
+        .popup.show {
+            display: block;
+        }
+        .popup h3 {
+            margin: 0 0 15px;
+        }
+        .popup .stars {
+            margin-bottom: 15px;
+        }
+        .popup-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+            transition: transform 0.3s ease;
+        }
+        .popup-btn.confirm {
+            background: #22c55e;
+            color: #1e293b;
+        }
+        .popup-btn.cancel {
+            background: #ef4444;
+            color: #f8f8f2;
+        }
+        .popup-btn:hover {
+            transform: scale(1.1);
+        }
+        .chart-container {
+            max-width: 100%;
+            margin: 20px 0;
+            padding: 10px;
+            background: #334155;
+            border-radius: 12px;
+            animation: fadeIn 2s ease-out;
+            transform: perspective(1000px);
+            transition: transform 0.3s ease;
+        }
+        .chart-container:hover {
+            transform: perspective(1000px) rotateX(2deg);
+        }
+        canvas {
+            max-width: 100%;
+        }
+        .suggestions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .suggestion-card {
+            background: #475569;
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+            transform: perspective(1000px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .suggestion-card:hover {
+            transform: perspective(1000px) rotateY(5deg);
+            box-shadow: 0 4px 15px rgba(255, 121, 198, 0.5);
+        }
+        .suggestion-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        .code-input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 2px solid #00b7eb;
+            border-radius: 10px;
+            background: #1e293b;
+            color: #e0e0e0;
+            font-size: 1em;
+            box-shadow: 0 0 10px rgba(0, 183, 235, 0.3);
+            outline: none;
+        }
+        .code-input:focus {
+            border-color: #f1fa8c;
+            box-shadow: 0 0 15px rgba(241, 250, 140, 0.5);
+        }
+        .code-btn {
+            background: #22c55e;
+            color: #1e293b;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            animation: blink 3s infinite;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .code-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.5);
+        }
+        .error {
+            color: #ef4444;
+            font-weight: bold;
+            margin-top: 10px;
+            display: none;
+            animation: pulse 2s infinite;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        @media (max-width: 600px) {
+            .code-container, .container {
+                padding: 10px;
+            }
+            h1 {
+                font-size: 1.6em;
+            }
+            h2 {
+                font-size: 1.4em;
+            }
+            h3 {
+                font-size: 1.2em;
+            }
+            .anime-card {
+                padding: 10px;
+            }
+            .anime-card h3 {
+                font-size: 1em;
+            }
+            .anime-card p {
+                font-size: 0.8em;
+            }
+            .status-btn, .popup-btn {
+                padding: 6px 12px;
+                font-size: 0.85em;
+            }
+            .chart-container {
+                padding: 5px;
+            }
+            .code-input {
+                font-size: 0.9em;
+                padding: 8px;
+            }
+            .suggestion-card img {
+                height: 100px;
+            }
+            .popup {
+                width: 80%;
+                padding: 15px;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <canvas class="particles" id="particles"></canvas>
+    <div class="code-container" id="codeContainer">
+        <h1>🔒 Gib den Code ein</h1>
+        <p>Yo, tipp den Code, um deine Anime-Watchlist zu checken! 😍</p>
+        <input type="text" class="code-input" id="codeInput" placeholder="Code hier eingeben">
+        <button class="code-btn" onclick="checkCode()">Los geht’s! 🚀</button>
+        <p class="error" id="errorMsg">Falscher Code, nochmal!</p>
+    </div>
+
+    <div class="container" id="contentContainer">
+        <h1 class="reveal">🔥 Deine Anime-Watchlist</h1>
+        <p class="reveal">Yo, hier trackst du deine Animes, checkst Watchtime und findest neue Kracher! Bewerte mit Sternen, und ich lern deinen Style! 😎</p>
+
+        <div class="watchtime-box reveal" id="totalWatchtime">Gesamte Watchtime: 0 Stunden</div>
+
+        <h2 class="reveal">Deine Watchlist</h2>
+        <div class="card-container reveal" id="watchlistCards"></div>
+
+        <h2 class="reveal">Dein Anime-Style</h2>
+        <div class="chart-container reveal">
+            <canvas id="genreChart"></canvas>
+        </div>
+
+        <h2 class="reveal">Anime-Vorschläge</h2>
+        <div class="suggestions reveal" id="suggestions"></div>
+
+        <p class="final-note reveal">Du bist ein Anime-Rockstar! Neue Vorschläge? Bewerte mehr! 🌟</p>
+    </div>
+
+    <div class="popup" id="ratingPopup">
+        <h3 id="popupTitle">Anime bewerten</h3>
+        <div class="stars" id="popupStars"></div>
+        <button class="popup-btn confirm" onclick="confirmRating()">Bewerten</button>
+        <button class="popup-btn cancel" onclick="closePopup()">Schließen</button>
+    </div>
+
+    <script>
+        const animeData = [
+            { name: "Attack on Titan", episodes: 87, episodeLength: 24, status: "watch", rating: 0, genre: "Action, Horror, Supernatural", description: "Epische Kämpfe gegen Titanen, krasser Plot." },
+            { name: "Demon Slayer", episodes: 44, episodeLength: 23, status: "watched", rating: 0, genre: "Shonen, Action, Supernatural", description: "Atemberaubende Animation, Dämonenjagd." },
+            { name: "K-On!", episodes: 36, episodeLength: 24, status: "watch", rating: 0, genre: "Slice of Life, Comedy", description: "Chillige Musik und Freundschaft." },
+            { name: "High School DxD", episodes: 48, episodeLength: 24, status: "watch", rating: 0, genre: "Ecchi, Harem, Action, Comedy, Supernatural", description: "Dämonen, Engel, heiße Kämpfe und sehr viel Fanservice. Romantische Spannung inklusive." },
+            { name: "Trinity Seven", episodes: 12, episodeLength: 24, status: "watch", rating: 0, genre: "Ecchi, Harem, Magie, Comedy", description: "Magieschule, attraktive Mädchen, frecher Protagonist – klassischer Harem mit Ecchi." },
+            { name: "Sekirei", episodes: 25, episodeLength: 24, status: "watch", rating: 0, genre: "Ecchi, Harem, Action, Romantik", description: "Kämpferische Mädels, die sich an einen Jungen binden – viel Romantik, viel nackte Haut." },
+            { name: "The Testament of Sister New Devil", episodes: 22, episodeLength: 24, status: "watch", rating: 0, genre: "Ecchi, Harem, Supernatural, Action", description: "Dämonen, sexy Beschwörungs-Szenen, sehr versaut und trotzdem Story-basiert." },
+            { name: "Rosario + Vampire", episodes: 26, episodeLength: 24, status: "watch", rating: 0, genre: "Ecchi, Harem, Romantik, Comedy, Supernatural", description: "Monster-Mädels an einer Schule, ein menschlicher Junge mittendrin – Romantik, Ecchi, Comedy." },
+            { name: "So, I Can't Play H!", episodes: 12, episodeLength: 24, status: "watch", rating: 0, genre: "Ecchi, Harem, Romantik, Supernatural", description: "Perverser Protagonist trifft auf eine Todesgöttin – Romantik, Magie, Fanservice." },
+            { name: "Highschool of the Dead", episodes: 12, episodeLength: 24, status: "watch", rating: 0, genre: "Ecchi, Action, Horror", description: "Zombie-Apokalypse, extrem viele erotische Szenen." },
+            { name: "Date A Live", episodes: 46, episodeLength: 24, status: "watch", rating: 0, genre: "Ecchi, Harem, Romantik, Action, Supernatural", description: "Geistermädchen, die durch Romantik gezähmt werden – Harem, Ecchi, Action." },
+            { name: "Is This a Zombie?", episodes: 22, episodeLength: 24, status: "watch", rating: 0, genre: "Ecchi, Harem, Comedy, Supernatural, Magie", description: "Fantasy mit Dämonen, Magie und absurdem Humor und Fanservice." },
+            { name: "Demon King Daimao", episodes: 12, episodeLength: 24, status: "watch", rating: 0, genre: "Ecchi, Harem, Magie, Comedy, Action", description: "Schüler als zukünftiger Dämonenkönig prophezeit – viele Girls, viel Magie, viel Haut." }
+        ];
+
+        const suggestionsData = [
+            { name: "To Love-Ru", genre: "Ecchi, Harem, Comedy", img: "https://via.placeholder.com/200x150?text=To+Love-Ru" },
+            { name: "Prison School", genre: "Ecchi, Harem, Comedy", img: "https://via.placeholder.com/200x150?text=Prison+School" },
+            { name: "No Game No Life", genre: "Fantasy, Comedy", img: "https://via.placeholder.com/200x150?text=No+Game+No+Life" },
+            { name: "Kaguya-sama: Love is War", genre: "Romantik, Comedy", img: "https://via.placeholder.com/200x150?text=Kaguya-sama" },
+            { name: "Jujutsu Kaisen", genre: "Action, Supernatural", img: "https://via.placeholder.com/200x150?text=Jujutsu+Kaisen" },
+            { name: "My Hero Academia", genre: "Shonen, Action", img: "https://via.placeholder.com/200x150?text=My+Hero+Academia" },
+            { name: "Horimiya", genre: "Slice of Life, Romantik", img: "https://via.placeholder.com/200x150?text=Horimiya" }
+        ];
+
+        let currentAnimeIndex = null;
+        let tempRating = 0;
+
+        function checkCode() {
+            const code = document.getElementById('codeInput').value;
+            const correctCode = 'Ani-X';
+            const errorMsg = document.getElementById('errorMsg');
+            const codeContainer = document.getElementById('codeContainer');
+            const contentContainer = document.getElementById('contentContainer');
+
+            if (code === correctCode) {
+                codeContainer.style.display = 'none';
+                contentContainer.style.display = 'block';
+                initWatchlist();
+                initChart();
+                initSuggestions();
+                initScrollReveal();
+                initParticles();
+            } else {
+                errorMsg.style.display = 'block';
+            }
+        }
+
+        function initWatchlist() {
+            const container = document.getElementById('watchlistCards');
+            const savedData = JSON.parse(localStorage.getItem('animeData')) || animeData;
+            savedData.sort((a, b) => a.status === 'watch' && b.status === 'watched' ? -1 : 1);
+            container.innerHTML = '';
+            savedData.forEach((anime, index) => {
+                const watchtime = anime.episodes * anime.episodeLength;
+                const hours = Math.floor(watchtime / 60);
+                const minutes = watchtime % 60;
+                const card = document.createElement('div');
+                card.className = 'anime-card reveal';
+                card.innerHTML = `
+                    <h3>${anime.name}</h3>
+                    <div class="divider"></div>
+                    <p><strong>Genre:</strong> ${anime.genre}</p>
+                    <p class="story"><strong>Story:</strong> ${anime.description}</p>
+                    <p><strong>Watchtime:</strong> ${hours}h ${minutes}m</p>
+                    <p><strong>Folgen:</strong> ${anime.episodes}</p>
+                    <div class="divider"></div>
+                    <button class="status-btn ${anime.status}" onclick="toggleStatus(${index})">${anime.status === 'watch' ? 'Schauen' : 'Geschaut'}</button>
+                    <div class="stars">${renderStars(anime.rating)}</div>
+                `;
+                container.appendChild(card);
+            });
+            updateWatchtime();
+            initScrollReveal();
+        }
+
+        function renderStars(rating) {
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                stars += `<span class="star ${i <= rating ? 'filled' : ''}">⭐</span>`;
+            }
+            return stars;
+        }
+
+        function renderPopupStars(rating) {
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                stars += `<span class="star ${i <= rating ? 'filled' : ''}" data-rating="${i}" onclick="selectPopupRating(${i})">⭐</span>`;
+            }
+            return stars;
+        }
+
+        function toggleStatus(index) {
+            const savedData = JSON.parse(localStorage.getItem('animeData')) || animeData;
+            const wasWatch = savedData[index].status === 'watch';
+            savedData[index].status = savedData[index].status === 'watch' ? 'watched' : 'watch';
+            localStorage.setItem('animeData', JSON.stringify(savedData));
+            initWatchlist();
+            if (wasWatch && savedData[index].rating === 0) {
+                showRatingPopup(index, savedData[index].name);
+            }
+            initChart();
+            initSuggestions();
+        }
+
+        function showRatingPopup(index, name) {
+            currentAnimeIndex = index;
+            tempRating = 0;
+            const popup = document.getElementById('ratingPopup');
+            const title = document.getElementById('popupTitle');
+            const stars = document.getElementById('popupStars');
+            title.textContent = `${name} bewerten`;
+            stars.innerHTML = renderPopupStars(tempRating);
+            popup.classList.add('show');
+        }
+
+        function selectPopupRating(rating) {
+            tempRating = rating;
+            const stars = document.querySelectorAll('#popupStars .star');
+            stars.forEach(star => {
+                const starRating = parseInt(star.getAttribute('data-rating'));
+                star.classList.toggle('filled', starRating <= tempRating);
+            });
+        }
+
+        function confirmRating() {
+            if (currentAnimeIndex !== null && tempRating > 0) {
+                const savedData = JSON.parse(localStorage.getItem('animeData')) || animeData;
+                savedData[currentAnimeIndex].rating = tempRating;
+                localStorage.setItem('animeData', JSON.stringify(savedData));
+                initWatchlist();
+                initChart();
+                initSuggestions();
+                closePopup();
+            }
+        }
+
+        function closePopup() {
+            const popup = document.getElementById('ratingPopup');
+            popup.classList.remove('show');
+            currentAnimeIndex = null;
+            tempRating = 0;
+        }
+
+        function updateWatchtime() {
+            const savedData = JSON.parse(localStorage.getItem('animeData')) || animeData;
+            const totalMinutes = savedData
+                .filter(anime => anime.status === 'watched')
+                .reduce((sum, anime) => sum + anime.episodes * anime.episodeLength, 0);
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+            document.getElementById('totalWatchtime').textContent = `Gesamte Watchtime: ${hours} Stunden ${minutes} Minuten`;
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('genreChart').getContext('2d');
+            const savedData = JSON.parse(localStorage.getItem('animeData')) || animeData;
+            const genreScores = savedData.reduce((acc, anime) => {
+                if (anime.rating > 0) {
+                    anime.genre.split(', ').forEach(g => {
+                        acc[g] = (acc[g] || 0) + anime.rating;
+                    });
+                }
+                return acc;
+            }, {});
+            const genres = ['Ecchi', 'Harem', 'Action', 'Shonen', 'Slice of Life', 'Comedy', 'Romantik', 'Fantasy', 'Horror', 'Supernatural', 'Magie'];
+            const data = genres.map(genre => genreScores[genre] || 0);
+            const gradients = genres.map((_, i) => {
+                const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+                const colors = [
+                    ['#ef4444', '#f1fa8c'],
+                    ['#22c55e', '#00b7eb'],
+                    ['#00b7eb', '#ff79c6'],
+                    ['#ef4444', '#f1fa8c'],
+                    ['#22c55e', '#00b7eb'],
+                    ['#00b7eb', '#ff79c6'],
+                    ['#ef4444', '#f1fa8c'],
+                    ['#22c55e', '#00b7eb'],
+                    ['#00b7eb', '#ff79c6'],
+                    ['#ef4444', '#f1fa8c'],
+                    ['#22c55e', '#00b7eb']
+                ];
+                gradient.addColorStop(0, colors[i % colors.length][0]);
+                gradient.addColorStop(1, colors[i % colors.length][1]);
+                return gradient;
+            });
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: genres,
+                    datasets: [{
+                        label: 'Genre-Präferenz',
+                        data: data,
+                        backgroundColor: gradients,
+                        borderColor: genres.map((_, i) => ['#dc2626', '#16a34a', '#0284c7'][i % 3]),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    animation: {
+                        duration: 1500,
+                        easing: 'easeOutBounce',
+                        onProgress: function(animation) {
+                            const chart = animation.chart;
+                            const dataset = chart.data.datasets[0];
+                            const meta = chart.getDatasetMeta(0);
+                            meta.data.forEach((bar, index) => {
+                                const t = animation.currentStep / animation.numSteps;
+                                const colors = [
+                                    ['#ef4444', '#f1fa8c'],
+                                    ['#22c55e', '#00b7eb'],
+                                    ['#00b7eb', '#ff79c6'],
+                                    ['#ef4444', '#f1fa8c'],
+                                    ['#22c55e', '#00b7eb'],
+                                    ['#00b7eb', '#ff79c6'],
+                                    ['#ef4444', '#f1fa8c'],
+                                    ['#22c55e', '#00b7eb'],
+                                    ['#00b7eb', '#ff79c6'],
+                                    ['#ef4444', '#f1fa8c'],
+                                    ['#22c55e', '#00b7eb']
+                                ];
+                                const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+                                gradient.addColorStop(0, colors[index % colors.length][0]);
+                                gradient.addColorStop(1, colors[index % colors.length][Math.floor(t * 2) % 2]);
+                                dataset.backgroundColor[index] = gradient;
+                            });
+                            chart.update();
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 50,
+                            grid: { color: '#475569' },
+                            ticks: { color: '#e0e0e0' }
+                        },
+                        x: {
+                            ticks: { color: '#e0e0e0' }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#e0e0e0' } },
+                        title: {
+                            display: true,
+                            text: 'Dein Anime-Style',
+                            color: '#0284c7',
+                            font: { size: 16 }
+                        }
+                    },
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        function initSuggestions() {
+            const savedData = JSON.parse(localStorage.getItem('animeData')) || animeData;
+            const genreScores = savedData.reduce((acc, anime) => {
+                if (anime.rating > 0) {
+                    anime.genre.split(', ').forEach(g => {
+                        acc[g] = (acc[g] || 0) + anime.rating;
+                    });
+                }
+                return acc;
+            }, {});
+            const topGenre = Object.keys(genreScores).length > 0
+                ? Object.keys(genreScores).reduce((a, b) => genreScores[a] > genreScores[b] ? a : b)
+                : 'Ecchi';
+            const suggestions = document.getElementById('suggestions');
+            suggestions.innerHTML = '';
+            suggestionsData.filter(s => s.genre.includes(topGenre)).forEach(suggestion => {
+                const card = document.createElement('div');
+                card.className = 'suggestion-card reveal';
+                card.innerHTML = `
+                    <img src="${suggestion.img}" alt="${suggestion.name}">
+                    <h3>${suggestion.name}</h3>
+                    <p>${suggestion.genre}</p>
+                `;
+                suggestions.appendChild(card);
+            });
+            initScrollReveal();
+        }
+
+        function initScrollReveal() {
+            const reveals = document.querySelectorAll('.reveal');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+            reveals.forEach(reveal => observer.observe(reveal));
+        }
+
+        function initParticles() {
+            const canvas = document.getElementById('particles');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const particles = [];
+            for (let i = 0; i < 50; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * 2 + 1,
+                    vx: Math.random() * 2 - 1,
+                    vy: Math.random() * 2 - 1,
+                    color: Math.random() > 0.5 ? '#00b7eb' : '#f1fa8c'
+                });
+            }
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0 || p.x > canvas.width) p.vx = -p.vx;
+                    if (p.y < 0 || p.y > canvas.height) p.vy = -p.vy;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.fill();
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+    </script>
+</body>
+</html>
