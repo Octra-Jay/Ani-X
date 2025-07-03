@@ -57,6 +57,30 @@
             z-index: 1;
             transform: perspective(1000px);
         }
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: #334155;
+            color: #e0e0e0;
+            border-radius: 10px;
+            margin: 0 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .tab.active {
+            background: #9333ea;
+            color: #f8f8f2;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
         .reveal {
             opacity: 0;
             transform: translateY(30px) rotateX(10deg);
@@ -112,6 +136,20 @@
             position: relative;
             border: 1px solid #f97316;
             cursor: pointer;
+            background-size: cover;
+            background-position: center;
+        }
+        .anime-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(5px);
+            z-index: 0;
+            border-radius: 15px;
         }
         .anime-card.watched {
             background: rgba(147, 51, 234, 0.9);
@@ -124,12 +162,9 @@
         .anime-card:active {
             transform: scale(1.05);
         }
-        .anime-card img {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-            border-radius: 10px;
-            margin-bottom: 10px;
+        .anime-card-content {
+            position: relative;
+            z-index: 1;
         }
         .anime-card h3 {
             font-size: 1.2em;
@@ -324,6 +359,50 @@
             border-radius: 10px;
             margin-bottom: 10px;
         }
+        .connections {
+            max-width: 600px;
+            margin: 20px auto;
+        }
+        .connection-form {
+            background: #334155;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .connection-form h3 {
+            margin-top: 0;
+        }
+        .connection-form input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #9333ea;
+            border-radius: 5px;
+            background: #1e293b;
+            color: #e0e0e0;
+        }
+        .connection-btn {
+            padding: 8px 15px;
+            background: #9333ea;
+            color: #f8f8f2;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .connection-btn:hover {
+            transform: scale(1.05);
+        }
+        .connection-status {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .connected {
+            color: #22c55e;
+        }
+        .disconnected {
+            color: #ef4444;
+        }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -359,9 +438,6 @@
             .anime-card p {
                 font-size: 0.8em;
             }
-            .anime-card img {
-                height: 100px;
-            }
             .status-btn, .popup-btn {
                 padding: 6px 12px;
                 font-size: 0.85em;
@@ -375,6 +451,12 @@
             .popup {
                 width: 80%;
                 padding: 15px;
+            }
+            .tabs {
+                flex-wrap: wrap;
+            }
+            .tab {
+                margin: 5px;
             }
         }
     </style>
@@ -390,22 +472,54 @@
     <canvas class="particles" id="particles"></canvas>
     <div class="container">
         <h1 class="reveal">🔥 Deine Anime-Watchlist</h1>
-        <p class="reveal">Yo, hier trackst du deine Animes, checkst Watchtime und findest neue Kracher! Bewerte mit dem Slider, und ich lern deinen Style! 😎</p>
+        <p class="reveal">Yo, track deine Animes, sync mit Crunchyroll/AniWorld, check Watchtime und find krassere Vorschläge! 😎</p>
 
-        <div class="watchtime-box reveal" id="totalWatchtime">Gesamte Watchtime: 0 Stunden</div>
-
-        <h2 class="reveal">Deine Watchlist</h2>
-        <div class="card-container reveal" id="watchlistCards"></div>
-
-        <h2 class="reveal">Dein Anime-Style</h2>
-        <div class="chart-container reveal">
-            <canvas id="genreChart"></canvas>
+        <div class="tabs reveal">
+            <div class="tab active" onclick="switchTab('watchlist')">Watchlist</div>
+            <div class="tab" onclick="switchTab('style')">Anime-Style</div>
+            <div class="tab" onclick="switchTab('suggestions')">Vorschläge</div>
+            <div class="tab" onclick="switchTab('connections')">Connections</div>
         </div>
 
-        <h2 class="reveal">Anime-Vorschläge</h2>
-        <div class="suggestions reveal" id="suggestions"></div>
+        <div class="tab-content active" id="watchlist">
+            <div class="watchtime-box reveal" id="totalWatchtime">Gesamte Watchtime: 0 Stunden</div>
+            <h2 class="reveal">Deine Watchlist</h2>
+            <div class="card-container reveal" id="watchlistCards"></div>
+        </div>
 
-        <p class="final-note reveal">Du bist ein Anime-Rockstar! Neue Vorschläge? Bewerte mehr! 🌟</p>
+        <div class="tab-content" id="style">
+            <h2 class="reveal">Dein Anime-Style</h2>
+            <div class="chart-container reveal">
+                <canvas id="genreChart"></canvas>
+            </div>
+        </div>
+
+        <div class="tab-content" id="suggestions">
+            <h2 class="reveal">Anime-Vorschläge</h2>
+            <div class="suggestions reveal" id="suggestionsCards"></div>
+        </div>
+
+        <div class="tab-content" id="connections">
+            <h2 class="reveal">Streaming-Konten verbinden</h2>
+            <div class="connections reveal">
+                <div class="connection-form">
+                    <h3>Crunchyroll</h3>
+                    <input type="text" id="crunchyrollUsername" placeholder="Username">
+                    <input type="password" id="crunchyrollPassword" placeholder="Password">
+                    <button class="connection-btn" onclick="connectService('crunchyroll')">Verbinden</button>
+                    <div class="connection-status" id="crunchyrollStatus">Nicht verbunden</div>
+                </div>
+                <div class="connection-form">
+                    <h3>AniWorld</h3>
+                    <input type="text" id="aniworldUsername" placeholder="Username">
+                    <input type="password" id="aniworldPassword" placeholder="Password">
+                    <button class="connection-btn" onclick="connectService('aniworld')">Verbinden</button>
+                    <div class="connection-status" id="aniworldStatus">Nicht verbunden</div>
+                </div>
+            </div>
+        </div>
+
+        <p class="final-note reveal">Du bist ein Anime-Rockstar! Sync mehr, lieb zart, find die krassesten Animes! 🌟</p>
     </div>
 
     <div class="popup" id="ratingPopup">
@@ -418,19 +532,19 @@
 
     <script>
         const animeData = [
-            { name: "Attack on Titan", episodes: 87, episodeLength: 24, status: "watch", rating: 0, comment: "", genre: "Action, Horror, Supernatural", description: "Epische Kämpfe gegen Titanen, krasser Plot.", img: "https://via.placeholder.com/250x150?text=Attack+on+Titan" },
-            { name: "Demon Slayer", episodes: 44, episodeLength: 23, status: "watched", rating: 0, comment: "", genre: "Shonen, Action, Supernatural", description: "Atemberaubende Animation, Dämonenjagd.", img: "https://via.placeholder.com/250x150?text=Demon+Slayer" },
-            { name: "K-On!", episodes: 36, episodeLength: 24, status: "watch", rating: 0, comment: "", genre: "Slice of Life, Comedy", description: "Chillige Musik und Freundschaft.", img: "https://via.placeholder.com/250x150?text=K-On!" },
-            { name: "High School DxD", episodes: 48, episodeLength: 24, status: "watch", rating: 0, comment: "", genre: "Ecchi, Harem, Action, Comedy, Supernatural", description: "Dämonen, Engel, heiße Kämpfe und sehr viel Fanservice. Romantische Spannung inklusive.", img: "https://via.placeholder.com/250x150?text=High+School+DxD" },
-            { name: "Trinity Seven", episodes: 12, episodeLength: 24, status: "watch", rating: 0, comment: "", genre: "Ecchi, Harem, Magie, Comedy", description: "Magieschule, attraktive Mädchen, frecher Protagonist – klassischer Harem mit Ecchi.", img: "https://via.placeholder.com/250x150?text=Trinity+Seven" },
-            { name: "Sekirei", episodes: 25, episodeLength: 24, status: "watch", rating: 0, comment: "", genre: "Ecchi, Harem, Action, Romantik", description: "Kämpferische Mädels, die sich an einen Jungen binden – viel Romantik, viel nackte Haut.", img: "https://via.placeholder.com/250x150?text=Sekirei" },
-            { name: "The Testament of Sister New Devil", episodes: 22, episodeLength: 24, status: "watch", rating: 0, comment: "", genre: "Ecchi, Harem, Supernatural, Action", description: "Dämonen, sexy Beschwörungs-Szenen, sehr versaut und trotzdem Story-basiert.", img: "https://via.placeholder.com/250x150?text=Testament+of+Sister" },
-            { name: "Rosario + Vampire", episodes: 26, episodeLength: 24, status: "watch", rating: 0, comment: "", genre: "Ecchi, Harem, Romantik, Comedy, Supernatural", description: "Monster-Mädels an einer Schule, ein menschlicher Junge mittendrin – Romantik, Ecchi, Comedy.", img: "https://via.placeholder.com/250x150?text=Rosario+Vampire" },
-            { name: "So, I Can't Play H!", episodes: 12, episodeLength: 24, status: "watch", rating: 0, comment: "", genre: "Ecchi, Harem, Romantik, Supernatural", description: "Perverser Protagonist trifft auf eine Todesgöttin – Romantik, Magie, Fanservice.", img: "https://via.placeholder.com/250x150?text=So+I+Can’t+Play+H!" },
-            { name: "Highschool of the Dead", episodes: 12, episodeLength: 24, status: "watch", rating: 0, comment: "", genre: "Ecchi, Action, Horror", description: "Zombie-Apokalypse, extrem viele erotische Szenen.", img: "https://via.placeholder.com/250x150?text=Highschool+of+the+Dead" },
-            { name: "Date A Live", episodes: 46, episodeLength: 24, status: "watch", rating: 0, comment: "", genre: "Ecchi, Harem, Romantik, Action, Supernatural", description: "Geistermädchen, die durch Romantik gezähmt werden – Harem, Ecchi, Action.", img: "https://via.placeholder.com/250x150?text=Date+A+Live" },
-            { name: "Is This a Zombie?", episodes: 22, episodeLength: 24, status: "watch", rating: 0, comment: "", genre: "Ecchi, Harem, Comedy, Supernatural, Magie", description: "Fantasy mit Dämonen, Magie und absurdem Humor und Fanservice.", img: "https://via.placeholder.com/250x150?text=Is+This+a+Zombie?" },
-            { name: "Demon King Daimao", episodes: 12, episodeLength: 24, status: "watch", rating: 0, comment: "", genre: "Ecchi, Harem, Magie, Comedy, Action", description: "Schüler als zukünftiger Dämonenkönig prophezeit – viele Girls, viel Magie, viel Haut.", img: "https://via.placeholder.com/250x150?text=Demon+King+Daimao" }
+            { name: "Attack on Titan", episodes: 87, episodeLength: 24, status: "watch", rating: 0, comment: "", genre: "Action, Horror, Supernatural", description: "Epische Kämpfe gegen Titanen, krasser Plot.", images: ["https://via.placeholder.com/250x150?text=AoT+1", "https://via.placeholder.com/250x150?text=AoT+2", "https://via.placeholder.com/250x150?text=AoT+3"] },
+            { name: "Demon Slayer", episodes: 44, episodeLength: 23, status: "watched", rating: 0, comment: "", genre: "Shonen, Action, Supernatural", description: "Atemberaubende Animation, Dämonenjagd.", images: ["https://via.placeholder.com/250x150?text=Slayer+1", "https://via.placeholder.com/250x150?text=Slayer+2", "https://via.placeholder.com/250x150?text=Slayer+3"] },
+            { name: "K-On!", episodes: 36, episodeLength: 24, status: "watch", rating: 0, comment: "", genre: "Slice of Life, Comedy", description: "Chillige Musik und Freundschaft.", images: ["https://via.placeholder.com/250x150?text=K-On+1", "https://via.placeholder.com/250x150?text=K-On+2", "https://via.placeholder.com/250x150?text=K-On+3"] },
+            { name: "High School DxD", episodes: 48, episodeLength: 24, status: "watch", rating: 0, comment: "", genre: "Ecchi, Harem, Action, Comedy, Supernatural", description: "Dämonen, Engel, heiße Kämpfe und sehr viel Fanservice.", images: ["https://via.placeholder.com/250x150?text=DxD+1", "https://via.placeholder.com/250x150?text=DxD+2", "https://via.placeholder.com/250x150?text=DxD+3"] },
+            { name: "Trinity Seven", episodes: 12, episodeLength: 24, status: "watch", rating: 0, comment: "", genre: "Ecchi, Harem, Magie, Comedy", description: "Magieschule, attraktive Mädchen, frecher Protagonist.", images: ["https://via.placeholder.com/250x150?text=Trinity+1", "https://via.placeholder.com/250x150?text=Trinity+2", "https://via.placeholder.com/250x150?text=Trinity+3"] },
+            { name: "Sekirei", episodes: 25, episodeLength: 24, status: "watch", rating: 0, comment: "", genre: "Ecchi, Harem, Action, Romantik", description: "Kämpferische Mädels, viel Romantik, viel Haut.", images: ["https://via.placeholder.com/250x150?text=Sekirei+1", "https://via.placeholder.com/250x150?text=Sekirei+2", "https://via.placeholder.com/250x150?text=Sekirei+3"] },
+            { name: "The Testament of Sister New Devil", episodes: 22, episodeLength: 24, status: "watch", rating: 0, comment: "", genre: "Ecchi, Harem, Supernatural, Action", description: "Dämonen, sexy Szenen, Story-basiert.", images: ["https://via.placeholder.com/250x150?text=Testament+1", "https://via.placeholder.com/250x150?text=Testament+2", "https://via.placeholder.com/250x150?text=Testament+3"] },
+            { name: "Rosario + Vampire", episodes: 26, episodeLength: 24, status: "watch", rating: 0, comment: "", genre: "Ecchi, Harem, Romantik, Comedy, Supernatural", description: "Monster-Mädels, Romantik, Ecchi, Comedy.", images: ["https://via.placeholder.com/250x150?text=Rosario+1", "https://via.placeholder.com/250x150?text=Rosario+2", "https://via.placeholder.com/250x150?text=Rosario+3"] },
+            { name: "So, I Can't Play H!", episodes: 12, episodeLength: 24, status: "watch", rating: 0, comment: "", genre: "Ecchi, Harem, Romantik, Supernatural", description: "Perverser Protagonist, Todesgöttin, Fanservice.", images: ["https://via.placeholder.com/250x150?text=PlayH+1", "https://via.placeholder.com/250x150?text=PlayH+2", "https://via.placeholder.com/250x150?text=PlayH+3"] },
+            { name: "Highschool of the Dead", episodes: 12, episodeLength: 24, status: "watch", rating: 0, comment: "", genre: "Ecchi, Action, Horror", description: "Zombie-Apokalypse, erotische Szenen.", images: ["https://via.placeholder.com/250x150?text=HOTD+1", "https://via.placeholder.com/250x150?text=HOTD+2", "https://via.placeholder.com/250x150?text=HOTD+3"] },
+            { name: "Date A Live", episodes: 46, episodeLength: 24, status: "watch", rating: 0, comment: "", genre: "Ecchi, Harem, Romantik, Action, Supernatural", description: "Geistermädchen, Romantik, Harem, Action.", images: ["https://via.placeholder.com/250x150?text=DateALive+1", "https://via.placeholder.com/250x150?text=DateALive+2", "https://via.placeholder.com/250x150?text=DateALive+3"] },
+            { name: "Is This a Zombie?", episodes: 22, episodeLength: 24, status: "watch", rating: 0, comment: "", genre: "Ecchi, Harem, Comedy, Supernatural, Magie", description: "Fantasy, Dämonen, Humor, Fanservice.", images: ["https://via.placeholder.com/250x150?text=Zombie+1", "https://via.placeholder.com/250x150?text=Zombie+2", "https://via.placeholder.com/250x150?text=Zombie+3"] },
+            { name: "Demon King Daimao", episodes: 12, episodeLength: 24, status: "watch", rating: 0, comment: "", genre: "Ecchi, Harem, Magie, Comedy, Action", description: "Dämonenkönig, Girls, Magie, Haut.", images: ["https://via.placeholder.com/250x150?text=Daimao+1", "https://via.placeholder.com/250x150?text=Daimao+2", "https://via.placeholder.com/250x150?text=Daimao+3"] }
         ];
 
         const suggestionsData = [
@@ -445,14 +559,71 @@
             { name: "Re:Zero", genre: "Fantasy, Romantik", img: "https://via.placeholder.com/200x150?text=Re:Zero" },
             { name: "Steins;Gate", genre: "Sci-Fi, Romantik", img: "https://via.placeholder.com/200x150?text=Steins;Gate" },
             { name: "Blue Exorcist", genre: "Supernatural, Action", img: "https://via.placeholder.com/200x150?text=Blue+Exorcist" },
-            { name: "Konosuba", genre: "Comedy, Fantasy", img: "https://via.placeholder.com/200x150?text=Konosuba" }
+            { name: "Konosuba", genre: "Comedy, Fantasy", img: "https://via.placeholder.com/200x150?text=Konosuba" },
+            { name: "Spy x Family", genre: "Comedy, Action", img: "https://via.placeholder.com/200x150?text=Spy+x+Family" },
+            { name: "Chainsaw Man", genre: "Action, Horror", img: "https://via.placeholder.com/200x150?text=Chainsaw+Man" },
+            { name: "Vinland Saga", genre: "Action, Drama", img: "https://via.placeholder.com/200x150?text=Vinland+Saga" },
+            { name: "Tokyo Revengers", genre: "Action, Drama", img: "https://via.placeholder.com/200x150?text=Tokyo+Revengers" },
+            { name: "Haikyuu!!", genre: "Sports, Comedy", img: "https://via.placeholder.com/200x150?text=Haikyuu" },
+            { name: "Dr. Stone", genre: "Sci-Fi, Adventure", img: "https://via.placeholder.com/200x150?text=Dr+Stone" },
+            { name: "Black Clover", genre: "Shonen, Action", img: "https://via.placeholder.com/200x150?text=Black+Clover" },
+            { name: "Death Note", genre: "Mystery, Supernatural", img: "https://via.placeholder.com/200x150?text=Death+Note" }
         ];
 
+        const fakeApi = {
+            images: {
+                "Attack on Titan": ["https://via.placeholder.com/250x150?text=AoT+1", "https://via.placeholder.com/250x150?text=AoT+2", "https://via.placeholder.com/250x150?text=AoT+3"],
+                "Demon Slayer": ["https://via.placeholder.com/250x150?text=Slayer+1", "https://via.placeholder.com/250x150?text=Slayer+2", "https://via.placeholder.com/250x150?text=Slayer+3"],
+                "K-On!": ["https://via.placeholder.com/250x150?text=K-On+1", "https://via.placeholder.com/250x150?text=K-On+2", "https://via.placeholder.com/250x150?text=K-On+3"],
+                "High School DxD": ["https://via.placeholder.com/250x150?text=DxD+1", "https://via.placeholder.com/250x150?text=DxD+2", "https://via.placeholder.com/250x150?text=DxD+3"],
+                "Trinity Seven": ["https://via.placeholder.com/250x150?text=Trinity+1", "https://via.placeholder.com/250x150?text=Trinity+2", "https://via.placeholder.com/250x150?text=Trinity+3"],
+                "Sekirei": ["https://via.placeholder.com/250x150?text=Sekirei+1", "https://via.placeholder.com/250x150?text=Sekirei+2", "https://via.placeholder.com/250x150?text=Sekirei+3"],
+                "The Testament of Sister New Devil": ["https://via.placeholder.com/250x150?text=Testament+1", "https://via.placeholder.com/250x150?text=Testament+2", "https://via.placeholder.com/250x150?text=Testament+3"],
+                "Rosario + Vampire": ["https://via.placeholder.com/250x150?text=Rosario+1", "https://via.placeholder.com/250x150?text=Rosario+2", "https://via.placeholder.com/250x150?text=Rosario+3"],
+                "So, I Can't Play H!": ["https://via.placeholder.com/250x150?text=PlayH+1", "https://via.placeholder.com/250x150?text=PlayH+2", "https://via.placeholder.com/250x150?text=PlayH+3"],
+                "Highschool of the Dead": ["https://via.placeholder.com/250x150?text=HOTD+1", "https://via.placeholder.com/250x150?text=HOTD+2", "https://via.placeholder.com/250x150?text=HOTD+3"],
+                "Date A Live": ["https://via.placeholder.com/250x150?text=DateALive+1", "https://via.placeholder.com/250x150?text=DateALive+2", "https://via.placeholder.com/250x150?text=DateALive+3"],
+                "Is This a Zombie?": ["https://via.placeholder.com/250x150?text=Zombie+1", "https://via.placeholder.com/250x150?text=Zombie+2", "https://via.placeholder.com/250x150?text=Zombie+3"],
+                "Demon King Daimao": ["https://via.placeholder.com/250x150?text=Daimao+1", "https://via.placeholder.com/250x150?text=Daimao+2", "https://via.placeholder.com/250x150?text=Daimao+3"]
+            },
+            watched: {
+                crunchyroll: [
+                    { name: "Demon Slayer", rating: 8, comment: "Mega Animation!" },
+                    { name: "Jujutsu Kaisen", rating: 9, comment: "Gojo ist OP!" }
+                ],
+                aniworld: [
+                    { name: "High School DxD", rating: 7, comment: "Fanservice FTW!" },
+                    { name: "Attack on Titan", rating: 10, comment: "Episch!" }
+                ]
+            },
+            recommendations: [
+                { name: "Spy x Family", genre: "Comedy, Action" },
+                { name: "Chainsaw Man", genre: "Action, Horror" },
+                { name: "To Love-Ru", genre: "Ecchi, Harem, Comedy" }
+            ]
+        };
+
         let currentAnimeIndex = null;
+        let connections = { crunchyroll: false, aniworld: false };
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.querySelector(`[onclick="switchTab('${tabId}')"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        function getRandomImage(animeName) {
+            const images = fakeApi.images[animeName] || ["https://via.placeholder.com/250x150?text=Default"];
+            return images[Math.floor(Math.random() * images.length)];
+        }
 
         function initWatchlist() {
             const container = document.getElementById('watchlistCards');
             const savedData = JSON.parse(localStorage.getItem('animeData')) || animeData;
+            savedData.forEach(anime => {
+                anime.image = getRandomImage(anime.name);
+            });
             savedData.sort((a, b) => a.status === 'watch' && b.status === 'watched' ? -1 : 1);
             container.innerHTML = '';
             savedData.forEach((anime, index) => {
@@ -461,18 +632,20 @@
                 const minutes = watchtime % 60;
                 const card = document.createElement('div');
                 card.className = `anime-card reveal ${anime.status}`;
+                card.style.backgroundImage = `url('${anime.image}')`;
                 card.innerHTML = `
-                    <img src="${anime.img}" alt="${anime.name}">
-                    <h3>${anime.name}</h3>
-                    <div class="divider"></div>
-                    <p><strong>Genre:</strong> ${anime.genre}</p>
-                    <p class="story" id="story-${index}"><strong>Story:</strong> ${anime.description}</p>
-                    <button class="expand-btn" onclick="toggleStory(${index})" id="expand-btn-${index}">Mehr</button>
-                    <p><strong>Watchtime:</strong> ${hours}h ${minutes}m</p>
-                    <p><strong>Folgen:</strong> ${anime.episodes}</p>
-                    <div class="divider"></div>
-                    <button class="status-btn ${anime.status}" onclick="markWatched(${index})">Angesehen</button>
-                    ${anime.rating > 0 ? `<p class="rating">Bewertung: ${anime.rating}/10 ${anime.comment ? `<br>Kommentar: ${anime.comment}` : ''}</p>` : ''}
+                    <div class="anime-card-content">
+                        <h3>${anime.name}</h3>
+                        <div class="divider"></div>
+                        <p><strong>Genre:</strong> ${anime.genre}</p>
+                        <p class="story" id="story-${index}"><strong>Story:</strong> ${anime.description}</p>
+                        <button class="expand-btn" onclick="toggleStory(${index})" id="expand-btn-${index}">Mehr</button>
+                        <p><strong>Watchtime:</strong> ${hours}h ${minutes}m</p>
+                        <p><strong>Folgen:</strong> ${anime.episodes}</p>
+                        <div class="divider"></div>
+                        <button class="status-btn ${anime.status}" onclick="markWatched(${index})">Angesehen</button>
+                        ${anime.rating > 0 ? `<p class="rating">Bewertung: ${anime.rating}/10 ${anime.comment ? `<br>Kommentar: ${anime.comment}` : ''}</p>` : ''}
+                    </div>
                 `;
                 container.appendChild(card);
             });
@@ -612,19 +785,60 @@
             const topGenre = Object.keys(genreScores).length > 0
                 ? Object.keys(genreScores).reduce((a, b) => genreScores[a] > genreScores[b] ? a : b)
                 : 'Ecchi';
-            const suggestions = document.getElementById('suggestions');
+            const suggestions = document.getElementById('suggestionsCards');
             suggestions.innerHTML = '';
-            suggestionsData.filter(s => s.genre.includes(topGenre)).forEach(suggestion => {
+            const recs = [...suggestionsData, ...fakeApi.recommendations]
+                .filter(s => s.genre.includes(topGenre))
+                .slice(0, 6);
+            recs.forEach(suggestion => {
                 const card = document.createElement('div');
                 card.className = 'suggestion-card reveal';
                 card.innerHTML = `
-                    <img src="${suggestion.img}" alt="${suggestion.name}">
+                    <img src="${suggestion.img || 'https://via.placeholder.com/200x150?text=' + suggestion.name}" alt="${suggestion.name}">
                     <h3>${suggestion.name}</h3>
                     <p>${suggestion.genre}</p>
                 `;
                 suggestions.appendChild(card);
             });
             initScrollReveal();
+        }
+
+        function connectService(service) {
+            const username = document.getElementById(`${service}Username`).value;
+            const password = document.getElementById(`${service}Password`).value;
+            if (username && password) {
+                connections[service] = true;
+                document.getElementById(`${service}Status`).textContent = 'Verbunden';
+                document.getElementById(`${service}Status`).className = 'connection-status connected';
+                syncWatched(service);
+            } else {
+                alert('Yo, Username und Password eingeben! 😅');
+            }
+        }
+
+        function syncWatched(service) {
+            const savedData = JSON.parse(localStorage.getItem('animeData')) || animeData;
+            fakeApi.watched[service].forEach(watched => {
+                const anime = savedData.find(a => a.name === watched.name);
+                if (anime && anime.status === 'watch') {
+                    anime.status = 'watched';
+                    anime.rating = watched.rating;
+                    anime.comment = watched.comment;
+                }
+            });
+            localStorage.setItem('animeData', JSON.stringify(savedData));
+            initWatchlist();
+            initChart();
+            initSuggestions();
+        }
+
+        function updateImages() {
+            const savedData = JSON.parse(localStorage.getItem('animeData')) || animeData;
+            savedData.forEach(anime => {
+                anime.image = getRandomImage(anime.name);
+            });
+            localStorage.setItem('animeData', JSON.stringify(savedData));
+            initWatchlist();
         }
 
         function initScrollReveal() {
@@ -679,6 +893,11 @@
         initSuggestions();
         initScrollReveal();
         initParticles();
+        setInterval(updateImages, 24 * 60 * 60 * 1000); // Daily image update
+        setInterval(() => {
+            if (connections.crunchyroll) syncWatched('crunchyroll');
+            if (connections.aniworld) syncWatched('aniworld');
+        }, 24 * 60 * 60 * 1000); // Daily sync
     </script>
 </body>
 </html>
